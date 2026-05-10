@@ -8,7 +8,8 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { ReviewSection } from "@/components/ReviewSection";
 import { Badge } from "@/components/ui/badge";
-import { getProfileBySlug, getProfileReviews, incrementViewCount } from "@/lib/queries";
+import { getProfileBySlug, getProfileReviews } from "@/lib/queries";
+import { incrementViewCount } from "@/lib/mutations";
 import { getStorageUrl } from "@/lib/utils";
 
 const DAYS_LABEL: Record<string, string> = {

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Upload, X, Star, ImageIcon, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase";
-import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/queries";
+import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/mutations";
 import { getStorageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 

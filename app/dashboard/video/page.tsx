@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Video, Upload, CheckCircle2, Clock, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase";
-import { uploadVerificationVideo } from "@/lib/queries";
+import { uploadVerificationVideo } from "@/lib/mutations";
 import { cn } from "@/lib/utils";
 
 type VideoStatus = "none" | "uploading" | "pending" | "approved" | "rejected";
