@@ -1,42 +1,87 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, XCircle, Play, Clock, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, XCircle, MapPin, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 type VideoStatus = "pending" | "approved" | "rejected";
 
 interface VideoItem {
   id: string;
-  profileName: string;
-  city: string;
-  submittedAt: string;
   status: VideoStatus;
-  videoUrl: string;
+  storage_path: string;
+  created_at: string;
+  profiles: {
+    id: string;
+    display_name: string;
+    city: string | null;
+  };
 }
 
-const MOCK_VIDEOS: VideoItem[] = [
-  { id: "1", profileName: "Ana Silva", city: "São Paulo", submittedAt: "há 2h", status: "pending", videoUrl: "" },
-  { id: "2", profileName: "Julia Santos", city: "Rio de Janeiro", submittedAt: "há 5h", status: "pending", videoUrl: "" },
-  { id: "3", profileName: "Carla Mendes", city: "Belo Horizonte", submittedAt: "há 8h", status: "pending", videoUrl: "" },
-  { id: "4", profileName: "Fernanda Costa", city: "Brasília", submittedAt: "há 1d", status: "approved", videoUrl: "" },
-  { id: "5", profileName: "Paula Lima", city: "Curitiba", submittedAt: "há 2d", status: "rejected", videoUrl: "" },
-];
-
 const STATUS_CONFIG = {
-  pending: { label: "Pendente", class: "bg-yellow-100 text-yellow-700", icon: Clock },
-  approved: { label: "Aprovado", class: "bg-green-100 text-green-700", icon: CheckCircle2 },
-  rejected: { label: "Rejeitado", class: "bg-red-100 text-red-700", icon: XCircle },
+  pending: { label: "Pendente", class: "bg-yellow-100 text-yellow-700" },
+  approved: { label: "Aprovado", class: "bg-green-100 text-green-700" },
+  rejected: { label: "Rejeitado", class: "bg-red-100 text-red-700" },
 };
 
 export default function AdminVideosPage() {
-  const [videos, setVideos] = useState(MOCK_VIDEOS);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
 
-  function updateStatus(id: string, status: VideoStatus) {
-    setVideos((prev) => prev.map((v) => v.id === id ? { ...v, status } : v));
-    if (playing === id) setPlaying(null);
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  async function loadVideos() {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("verification_videos")
+      .select("id, status, storage_path, created_at, profiles(id, display_name, city)")
+      .order("created_at", { ascending: false });
+
+    setVideos((data as unknown as VideoItem[]) ?? []);
+    setLoading(false);
+  }
+
+  async function updateStatus(videoId: string, profileId: string, status: VideoStatus) {
+    setUpdating(videoId);
+    const supabase = createClient();
+
+    await supabase
+      .from("verification_videos")
+      .update({ status, reviewed_at: new Date().toISOString() })
+      .eq("id", videoId);
+
+    if (status === "approved") {
+      await supabase
+        .from("profiles")
+        .update({ is_video_verified: true })
+        .eq("id", profileId);
+
+      // Recalcula trust score
+      await supabase.rpc("recalculate_trust_score", { p_profile_id: profileId });
+    }
+
+    setVideos((prev) => prev.map((v) => v.id === videoId ? { ...v, status } : v));
+    setUpdating(null);
+  }
+
+  function getVideoUrl(storagePath: string) {
+    const supabase = createClient();
+    const { data } = supabase.storage.from("verification-videos").getPublicUrl(storagePath);
+    return data.publicUrl;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-[#C2185B]" />
+      </div>
+    );
   }
 
   const pending = videos.filter((v) => v.status === "pending");
@@ -46,12 +91,10 @@ export default function AdminVideosPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Verificação de Vídeos</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Revise os vídeos enviados e aprove ou rejeite a verificação.
-        </p>
+        <p className="text-muted-foreground text-sm mt-1">Revise os vídeos e aprove ou rejeite a verificação.</p>
       </div>
 
-      {/* Fila pendente */}
+      {/* Pendentes */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <h2 className="font-semibold text-gray-900">Aguardando revisão</h2>
@@ -70,14 +113,64 @@ export default function AdminVideosPage() {
         ) : (
           <div className="space-y-4">
             {pending.map((video) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                isPlaying={playing === video.id}
-                onTogglePlay={() => setPlaying(playing === video.id ? null : video.id)}
-                onApprove={() => updateStatus(video.id, "approved")}
-                onReject={() => updateStatus(video.id, "rejected")}
-              />
+              <div key={video.id} className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#F8BBD9]/40 flex items-center justify-center">
+                      <span className="text-[#C2185B] font-bold">{video.profiles.display_name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{video.profiles.display_name}</p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="w-3 h-3" />{video.profiles.city ?? "—"} · {new Date(video.created_at).toLocaleDateString("pt-BR")}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full font-medium">Pendente</span>
+                </div>
+
+                {/* Player */}
+                <div
+                  className="relative aspect-video bg-gray-900 rounded-xl overflow-hidden cursor-pointer group"
+                  onClick={() => setPlaying(playing === video.id ? null : video.id)}
+                >
+                  {playing === video.id ? (
+                    <video
+                      src={getVideoUrl(video.storage_path)}
+                      className="w-full h-full object-cover"
+                      controls
+                      autoPlay
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-500">
+                      <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                        <Play className="w-6 h-6 text-white ml-1" />
+                      </div>
+                      <p className="text-xs text-gray-400">Clique para reproduzir</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white gap-2"
+                    onClick={() => updateStatus(video.id, video.profiles.id, "approved")}
+                    disabled={updating === video.id}
+                  >
+                    {updating === video.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    Aprovar verificação
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-red-200 text-red-500 hover:bg-red-50 gap-2"
+                    onClick={() => updateStatus(video.id, video.profiles.id, "rejected")}
+                    disabled={updating === video.id}
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Rejeitar
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -88,103 +181,25 @@ export default function AdminVideosPage() {
         <div>
           <h2 className="font-semibold text-gray-900 mb-4">Revisados recentemente</h2>
           <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
-            {reviewed.map((video) => {
-              const cfg = STATUS_CONFIG[video.status];
-              return (
-                <div key={video.id} className="flex items-center justify-between p-4 gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#F8BBD9]/40 flex items-center justify-center">
-                      <span className="text-[#C2185B] font-bold text-sm">{video.profileName.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{video.profileName}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />{video.city} · {video.submittedAt}
-                      </div>
-                    </div>
+            {reviewed.map((video) => (
+              <div key={video.id} className="flex items-center justify-between p-4 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#F8BBD9]/40 flex items-center justify-center">
+                    <span className="text-[#C2185B] font-bold text-sm">{video.profiles.display_name.charAt(0)}</span>
                   </div>
-                  <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", cfg.class)}>
-                    {cfg.label}
-                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{video.profiles.display_name}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(video.created_at).toLocaleDateString("pt-BR")}</p>
+                  </div>
                 </div>
-              );
-            })}
+                <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", STATUS_CONFIG[video.status].class)}>
+                  {STATUS_CONFIG[video.status].label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function VideoCard({
-  video, isPlaying, onTogglePlay, onApprove, onReject,
-}: {
-  video: VideoItem;
-  isPlaying: boolean;
-  onTogglePlay: () => void;
-  onApprove: () => void;
-  onReject: () => void;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#F8BBD9]/40 flex items-center justify-center">
-            <span className="text-[#C2185B] font-bold">{video.profileName.charAt(0)}</span>
-          </div>
-          <div>
-            <p className="font-medium text-gray-900">{video.profileName}</p>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="w-3 h-3" />{video.city} · enviado {video.submittedAt}
-            </div>
-          </div>
-        </div>
-        <span className="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full font-medium">
-          Pendente
-        </span>
-      </div>
-
-      {/* Player */}
-      <div
-        className="relative aspect-video bg-gray-900 rounded-xl overflow-hidden cursor-pointer group"
-        onClick={onTogglePlay}
-      >
-        {video.videoUrl ? (
-          <video
-            src={video.videoUrl}
-            className="w-full h-full object-cover"
-            controls={isPlaying}
-            autoPlay={isPlaying}
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-500">
-            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-              <Play className="w-6 h-6 text-white ml-1" />
-            </div>
-            <p className="text-xs text-gray-400">Clique para reproduzir</p>
-          </div>
-        )}
-      </div>
-
-      {/* Ações */}
-      <div className="flex gap-3">
-        <Button
-          className="flex-1 bg-green-500 hover:bg-green-600 text-white gap-2"
-          onClick={onApprove}
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          Aprovar verificação
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 border-red-200 text-red-500 hover:bg-red-50 gap-2"
-          onClick={onReject}
-        >
-          <XCircle className="w-4 h-4" />
-          Rejeitar
-        </Button>
-      </div>
     </div>
   );
 }

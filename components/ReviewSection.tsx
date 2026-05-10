@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Flag, ChevronDown, Send, MessageSquare } from "lucide-react";
+import { Star, Flag, Send, MessageSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { submitReview } from "@/lib/mutations";
 
 interface Review {
   id: string;
@@ -96,8 +97,32 @@ export function ReviewSection({
   }));
 
   async function onSubmit(data: ReviewForm) {
+    const ip = await fetch("https://api.ipify.org?format=json")
+      .then((r) => r.json())
+      .then((d) => d.ip)
+      .catch(() => "unknown");
+
+    const today = new Date().toISOString().split("T")[0];
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(`${ip}:${today}`));
+    const authorToken = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    const { review: saved, error } = await submitReview({
+      profile_id: profileId,
+      author_token: authorToken,
+      rating: data.rating,
+      comment: data.comment,
+    });
+
+    if (error) {
+      if (error.message?.includes("já avaliou")) {
+        alert("Você já avaliou este perfil hoje.");
+      }
+      return;
+    }
+
     const newReview: Review = {
-      id: crypto.randomUUID(),
+      id: saved?.id ?? crypto.randomUUID(),
       rating: data.rating,
       comment: data.comment,
       createdAt: new Date().toISOString(),
@@ -259,6 +284,27 @@ function FlagButton({ reviewId }: { reviewId: string }) {
   const [flagged, setFlagged] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  async function handleFlag() {
+    const today = new Date().toISOString().split("T")[0];
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(`flag:${today}`));
+    const reporterToken = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    const { createClient } = await import("@/lib/supabase");
+    const supabase = createClient();
+
+    await supabase.from("review_flags").insert({
+      review_id: reviewId,
+      reason: "Conteúdo inadequado",
+      reporter_token: reporterToken,
+    });
+
+    await supabase.rpc("increment_flag_count" as never, { p_review_id: reviewId } as never);
+
+    setFlagged(true);
+    setShowConfirm(false);
+  }
+
   if (flagged) {
     return <span className="text-xs text-muted-foreground">Denunciado</span>;
   }
@@ -270,11 +316,7 @@ function FlagButton({ reviewId }: { reviewId: string }) {
         <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => setShowConfirm(false)}>
           Não
         </Button>
-        <Button
-          size="sm"
-          className="h-7 text-xs px-2 bg-red-500 hover:bg-red-600 text-white"
-          onClick={() => { setFlagged(true); setShowConfirm(false); }}
-        >
+        <Button size="sm" className="h-7 text-xs px-2 bg-red-500 hover:bg-red-600 text-white" onClick={handleFlag}>
           Sim
         </Button>
       </div>
