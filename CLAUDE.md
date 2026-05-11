@@ -1,39 +1,34 @@
 # GarotasVip — Contexto Master
 
-## Projeto
-Marketplace adulto brasileiro. Acompanhantes criam perfis verificados, clientes encontram e contactam via WhatsApp. Monetização via planos premium (visibilidade). Similar ao Fatal Model, porém com melhor UX, verificação real e Trust Score.
+## O projeto
+Marketplace adulto brasileiro. Stack: Next.js 14 + Supabase + Tailwind v3 + shadcn/ui (Radix).
+Produção: https://garotasvip.vercel.app | GitHub: github.com/Garotasvip/garotasvip
 
-## Stack
-- Next.js 14 + TypeScript + App Router
-- Tailwind CSS v3 + shadcn/ui (Radix UI — NUNCA usar base-nova/v4)
-- Supabase (PostgreSQL + Auth + Storage + RLS)
-- Stripe (pagamentos — ainda não integrado)
-- Vercel (deploy)
-- GitHub: github.com/Garotasvip/garotasvip
+## Duas fontes de memória — entenda a diferença
 
-## URLs
-- Produção: https://garotasvip.vercel.app
-- Admin: https://garotasvip.vercel.app/admin
+### 1. Memória automática (estado e progresso)
+`C:\Users\DELL\.claude\projects\c--Users-DELL-marketplaceAdulto\memory\`
+- **Lida automaticamente** em toda sessão pelo Claude Code
+- Contém: status atual, pendências, bugs corrigidos, decisões de negócio
+- **Atualizar sempre** ao final de cada sessão
 
-## Memória do projeto
-Atualizar sempre: `C:\Users\DELL\.claude\projects\c--Users-DELL-marketplaceAdulto\memory\`
+### 2. Knowledge base (referência técnica)
+`.claude/knowledge/` dentro do projeto
+- Contém: stack, schema do banco, RLS, componentes, segurança, moderação, negócio
+- **Consultar** ao implementar qualquer feature
+- **Não duplicar** informação entre as duas fontes
 
-## Arquitetura de Agentes
-Leia `.claude/agents/00-orquestrador.md` antes de qualquer task complexa.
-Sequência obrigatória: **Planejar → Implementar → Revisar → Aprovar**
+## Regras invioláveis
+1. NUNCA commitar sem aprovação do Revisor (`.claude/agents/06-revisor.md`)
+2. NUNCA usar dados mock em produção
+3. NUNCA expor credenciais — ficam em `C:\Users\DELL\vault\marketplaceAdulto\`
+4. Supabase RLS SEMPRE ativo
+5. shadcn/ui SEMPRE estilo "default" com Radix UI — NUNCA base-nova/v4
+6. `lib/queries.ts` → server-only | `lib/mutations.ts` → client-safe
+7. NUNCA importar `lib/queries.ts` em arquivos com `"use client"`
 
-## Regras Invioláveis
-1. NUNCA commitar sem aprovação do Revisor
-2. NUNCA duplicar informação — knowledge/ é a fonte de verdade
-3. NUNCA usar dados mock em produção
-4. NUNCA expor credenciais no código ou commits
-5. Supabase RLS SEMPRE ativo — nunca desativar
-6. shadcn/ui SEMPRE estilo "default" com Radix UI
+## Sequência obrigatória para tasks complexas
+Planejar → Implementar → Revisar → Aprovar → Commitar
 
-## Onde encontrar o quê
-- Decisões de negócio → `.claude/knowledge/negocio/`
-- Schema do banco → `.claude/knowledge/banco-de-dados/`
-- Padrões de componentes → `.claude/knowledge/componentes/`
-- Stack técnica → `.claude/knowledge/stack/`
-- Regras de segurança → `.claude/knowledge/seguranca/`
-- Regras de moderação → `.claude/knowledge/moderacao/`
+## Agentes disponíveis
+`.claude/agents/` — ler o agente certo antes de cada tarefa
