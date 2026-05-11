@@ -32,7 +32,7 @@ export async function getActiveProfiles({
 
   if (city) query = query.ilike("city", `%${city}%`);
   if (priceMin) query = query.gte("price_from", priceMin);
-  if (priceMax) query = query.lte("price_from", priceMax);
+  if (priceMax) query = query.lte("price_to", priceMax);
   if (ratingMin) query = query.gte("trust_score", ratingMin * 20);
   if (premiumOnly) query = query.eq("is_premium", true);
 
@@ -94,4 +94,39 @@ export async function getProfileByUserId(userId: string) {
     .eq("user_id", userId)
     .single();
   return { profile: data, error };
+}
+
+export async function getAdminMetrics() {
+  const supabase = await createServerSupabaseClient();
+
+  const [
+    { count: totalActive },
+    { count: totalPending },
+    { count: totalSuspended },
+    { count: totalPremium },
+    { count: videosQueue },
+    { count: flaggedReviews },
+    recentProfiles,
+  ] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("status", "active"),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("status", "suspended"),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_premium", true),
+    supabase.from("verification_videos").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("reviews").select("*", { count: "exact", head: true }).gte("flag_count", 3).eq("is_approved", true),
+    supabase.from("profiles")
+      .select("id, display_name, city, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ]);
+
+  return {
+    totalActive: totalActive ?? 0,
+    totalPending: totalPending ?? 0,
+    totalSuspended: totalSuspended ?? 0,
+    totalPremium: totalPremium ?? 0,
+    videosQueue: videosQueue ?? 0,
+    flaggedReviews: flaggedReviews ?? 0,
+    recentProfiles: recentProfiles.data ?? [],
+  };
 }

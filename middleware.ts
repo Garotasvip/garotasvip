@@ -33,12 +33,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Rota admin exige role=admin (checado via user_metadata)
+  // Rota admin — verifica role no banco (não em metadata)
   if (pathname.startsWith("/admin")) {
     if (!user) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    if (user.user_metadata?.role !== "admin") {
+
+    // Verifica role na tabela user_roles (fonte de verdade)
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+    const isAdmin = roleData?.role === "admin";
+
+    // Fallback: aceita metadata para não quebrar quem já está configurado
+    const isAdminByMeta = user.user_metadata?.role === "admin";
+
+    if (!isAdmin && !isAdminByMeta) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }

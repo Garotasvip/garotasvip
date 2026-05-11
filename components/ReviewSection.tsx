@@ -8,7 +8,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { submitReview } from "@/lib/mutations";
 
 interface Review {
   id: string;
@@ -97,32 +96,25 @@ export function ReviewSection({
   }));
 
   async function onSubmit(data: ReviewForm) {
-    const ip = await fetch("https://api.ipify.org?format=json")
-      .then((r) => r.json())
-      .then((d) => d.ip)
-      .catch(() => "unknown");
-
-    const today = new Date().toISOString().split("T")[0];
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(`${ip}:${today}`));
-    const authorToken = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-
-    const { review: saved, error } = await submitReview({
-      profile_id: profileId,
-      author_token: authorToken,
-      rating: data.rating,
-      comment: data.comment,
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profile_id: profileId,
+        rating: data.rating,
+        comment: data.comment,
+      }),
     });
 
-    if (error) {
-      if (error.message?.includes("já avaliou")) {
-        alert("Você já avaliou este perfil hoje.");
-      }
+    const json = await res.json();
+
+    if (!res.ok) {
+      alert(json.error ?? "Erro ao enviar avaliação.");
       return;
     }
 
     const newReview: Review = {
-      id: saved?.id ?? crypto.randomUUID(),
+      id: json.review?.id ?? crypto.randomUUID(),
       rating: data.rating,
       comment: data.comment,
       createdAt: new Date().toISOString(),
