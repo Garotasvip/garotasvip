@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -11,17 +11,45 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/perfis", label: "Perfis", icon: Users, badge: 5 },
-  { href: "/admin/videos", label: "Vídeos", icon: Video, badge: 3 },
-  { href: "/admin/moderacao", label: "Moderação", icon: MessageSquareWarning, badge: 8 },
-];
+interface Badges {
+  perfis: number;
+  videos: number;
+  moderacao: number;
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [badges, setBadges] = useState<Badges>({ perfis: 0, videos: 0, moderacao: 0 });
+
+  useEffect(() => {
+    async function loadBadges() {
+      const supabase = createClient();
+      const [
+        { count: perfis },
+        { count: videos },
+        { count: moderacao },
+      ] = await Promise.all([
+        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("verification_videos").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("reviews").select("*", { count: "exact", head: true }).gte("flag_count", 3).eq("is_approved", true),
+      ]);
+      setBadges({
+        perfis: perfis ?? 0,
+        videos: videos ?? 0,
+        moderacao: moderacao ?? 0,
+      });
+    }
+    loadBadges();
+  }, [pathname]); // recarrega ao navegar entre páginas
+
+  const NAV_ITEMS = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, badge: 0 },
+    { href: "/admin/perfis", label: "Perfis", icon: Users, badge: badges.perfis },
+    { href: "/admin/videos", label: "Vídeos", icon: Video, badge: badges.videos },
+    { href: "/admin/moderacao", label: "Moderação", icon: MessageSquareWarning, badge: badges.moderacao },
+  ];
 
   async function handleLogout() {
     const supabase = createClient();
@@ -62,12 +90,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
             <span className="flex-1">{item.label}</span>
-            {item.badge && item.badge > 0 && (
+            {item.badge > 0 && (
               <span className={cn(
                 "text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold",
                 isActive(item) ? "bg-white/20 text-white" : "bg-red-500 text-white"
               )}>
-                {item.badge}
+                {item.badge > 99 ? "99+" : item.badge}
               </span>
             )}
           </Link>
@@ -95,7 +123,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar desktop */}
       <aside className="hidden lg:flex flex-col w-64 bg-gray-900 border-r border-gray-800 flex-shrink-0 fixed h-full z-30">
         <SidebarContent />
       </aside>
