@@ -23,10 +23,11 @@ async function loadCities(): Promise<CityOption[]> {
     "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
   );
   const data: IbgeCity[] = await res.json();
-  cachedCities = data.map((c) => ({
-    label: `${c.nome} - ${c.microrregiao.mesorregiao.UF.sigla}`,
-    value: `${c.nome} - ${c.microrregiao.mesorregiao.UF.sigla}`,
-  }));
+  cachedCities = data.map((c) => {
+    const uf = c.microrregiao?.mesorregiao?.UF?.sigla ?? "";
+    const label = uf ? `${c.nome} - ${uf}` : c.nome;
+    return { label, value: label };
+  });
   return cachedCities;
 }
 
