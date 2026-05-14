@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Plus, X } from "lucide-react";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase";
 import { upsertProfile } from "@/lib/mutations";
+import { CityAutocomplete } from "@/components/CityAutocomplete";
 
 const DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const;
 const DAYS_LABEL: Record<string, string> = {
@@ -39,7 +40,7 @@ export default function EditarPerfilPage() {
   );
   const [userId, setUserId] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, watch, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -125,7 +126,17 @@ export default function EditarPerfilPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Cidade</Label>
-              <Input placeholder="Ex: São Paulo" {...register("city")} className={errors.city ? "border-red-500" : ""} />
+              <Controller
+                name="city"
+                control={control}
+                render={({ field }) => (
+                  <CityAutocomplete
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={!!errors.city}
+                  />
+                )}
+              />
               {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
             </div>
           </div>

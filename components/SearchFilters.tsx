@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CityAutocomplete } from "@/components/CityAutocomplete";
 import {
   Sheet,
   SheetContent,
@@ -32,7 +33,7 @@ function FiltersForm({
 }) {
   const searchParams = useSearchParams();
 
-  const { register, handleSubmit, reset, watch } = useForm<FilterValues>({
+  const { register, handleSubmit, reset, watch, control } = useForm<FilterValues>({
     defaultValues: {
       city: searchParams.get("city") ?? "",
       priceMin: searchParams.get("priceMin") ?? "",
@@ -58,7 +59,16 @@ function FiltersForm({
       {/* Cidade */}
       <div className="space-y-1.5">
         <Label>Cidade</Label>
-        <Input placeholder="Ex: São Paulo" {...register("city")} />
+        <Controller
+          name="city"
+          control={control}
+          render={({ field }) => (
+            <CityAutocomplete
+              value={field.value}
+              onChange={field.onChange}
+            />
+          )}
+        />
       </div>
 
       {/* Faixa de preço */}

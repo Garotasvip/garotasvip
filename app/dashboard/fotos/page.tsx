@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase";
 import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/mutations";
 import { getStorageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface PhotoItem {
   id: string;
@@ -73,6 +74,7 @@ export default function FotosPage() {
 
       if (error || !path) {
         setPhotos((prev) => prev.filter((p) => p.id !== tempId));
+        toast.error("Erro ao enviar foto. Verifique o arquivo e tente novamente.");
         continue;
       }
 
@@ -92,6 +94,7 @@ export default function FotosPage() {
             : p
         )
       );
+      toast.success("Foto enviada com sucesso!");
     }
   }
 
