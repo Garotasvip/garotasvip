@@ -143,7 +143,7 @@ export default async function Home() {
                 <Button size="lg" className="bg-white text-[#C2185B] hover:bg-white/90 font-semibold px-10">Criar conta grátis</Button>
               </Link>
               <Link href="/perfis">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-10">Explorar perfis</Button>
+                <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 hover:text-white px-10">Explorar perfis</Button>
               </Link>
             </div>
           </div>
