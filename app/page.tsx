@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Search, ShieldCheck, Star, Crown } from "lucide-react";
+import { ShieldCheck, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProfileCard } from "@/components/ProfileCard";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { getFeaturedProfiles, getRecentProfiles } from "@/lib/queries";
 import { getCoverPhoto } from "@/lib/utils";
+import { HeroSearch } from "@/components/HeroSearch";
 
 function toCardProps(profile: Record<string, unknown>) {
   const photos = (profile.profile_photos as { storage_path: string; is_cover: boolean }[]) ?? [];
@@ -49,19 +50,7 @@ export default async function Home() {
               Perfis com verificação real, avaliações honestas e total segurança.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-              <form action="/perfis" method="GET" className="flex flex-col sm:flex-row gap-3 w-full">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    name="city"
-                    placeholder="Buscar por cidade..."
-                    className="pl-10 h-12 w-full bg-white text-gray-900 border-0 rounded-xl text-base px-4 focus:outline-none focus:ring-2 focus:ring-white/50"
-                  />
-                </div>
-                <Button type="submit" className="h-12 px-8 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold">
-                  Buscar
-                </Button>
-              </form>
+              <HeroSearch />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 mt-8 text-sm text-white/80">
               <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[#F8BBD9]" />Perfis verificados</div>
