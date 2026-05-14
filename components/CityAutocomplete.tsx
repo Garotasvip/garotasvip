@@ -116,12 +116,12 @@ export function CityAutocomplete({
         autoComplete="off"
       />
       {open && (
-        <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto">
+        <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto text-gray-900">
           {suggestions.map((opt) => (
             <li
               key={opt.value}
               onMouseDown={() => handleSelect(opt)}
-              className="px-3 py-2 text-sm cursor-pointer hover:bg-[#F8BBD9]/40 hover:text-[#C2185B] transition-colors"
+              className="px-3 py-2 text-sm text-gray-900 cursor-pointer hover:bg-[#F8BBD9]/40 hover:text-[#C2185B] transition-colors"
             >
               {opt.label}
             </li>
