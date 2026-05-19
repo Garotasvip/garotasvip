@@ -34,28 +34,28 @@ function splitRestrictions(restrictions: string[]) {
 function buildMessage(name: string, props: Omit<WhatsAppButtonProps, "number" | "name" | "fixed">) {
   const { city, services = [], restrictions = [], hourPrice, nightPrice } = props;
 
-  const lines: string[] = [`Olá ${name}! Vi seu perfil no GarotasVip`];
+  const lines: string[] = [`Olá ${name}! Vi seu perfil no GarotasVip 💋`];
 
   if (city || hourPrice || nightPrice) {
     const parts: string[] = [];
-    if (city) parts.push(city);
-    if (hourPrice) parts.push(hourPrice);
+    if (city) parts.push(`📍 ${city}`);
+    if (hourPrice) parts.push(`💰 ${hourPrice}`);
     if (nightPrice) parts.push(nightPrice);
     lines.push(parts.join("  |  "));
   }
 
   if (services.length > 0) {
     const shown = services.slice(0, 5).join(", ");
-    const extra = services.length > 5 ? ` (+${services.length - 5} serviços)` : "";
-    lines.push(`Faço: ${shown}${extra}`);
+    const extra = services.length > 5 ? ` (+${services.length - 5})` : "";
+    lines.push(`✅ Faço: ${shown}${extra}`);
   }
 
   const { rules, clientRestrictions } = splitRestrictions(restrictions);
-  if (rules.length > 0) lines.push(`Condições: ${rules.join(" | ")}`);
-  if (clientRestrictions.length > 0) lines.push(`Não atendo: ${clientRestrictions.join(", ")}`);
+  if (rules.length > 0) lines.push(`📋 Condições: ${rules.join(" | ")}`);
+  if (clientRestrictions.length > 0) lines.push(`🚫 Não atendo: ${clientRestrictions.join(", ")}`);
 
   lines.push(`\nPodemos conversar?`);
-  return encodeURIComponent(lines.join("\n"));
+  return encodeURIComponent(lines.join("\n\n"));
 }
 
 export function WhatsAppButton({ number, name, fixed = false, ...profileProps }: WhatsAppButtonProps) {
