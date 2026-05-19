@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   description TEXT,
   services TEXT[],
   restrictions TEXT[],
+  whatsapp_clicks INTEGER DEFAULT 0,
   price_from DECIMAL(10,2),
   price_to DECIMAL(10,2),
   whatsapp_number VARCHAR(20),

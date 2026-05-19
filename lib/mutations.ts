@@ -28,6 +28,11 @@ export async function upsertProfile(userId: string, values: Record<string, unkno
   return { profile: data, error };
 }
 
+export async function incrementWhatsAppClicks(profileId: string) {
+  const supabase = createClient();
+  await supabase.rpc("increment_whatsapp_clicks", { p_profile_id: profileId });
+}
+
 export async function incrementViewCount(profileId: string) {
   const supabase = createClient();
   await supabase.rpc("increment_view_count", { p_profile_id: profileId });

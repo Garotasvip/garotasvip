@@ -80,6 +80,7 @@ export default async function PerfilPage({ params }: PageProps) {
                   <WhatsAppButton
                     number={profile.whatsapp_number}
                     name={profile.display_name}
+                    profileId={profile.id}
                     city={profile.city as string}
                     services={profile.services as string[] ?? []}
                     restrictions={(profile as Record<string, unknown>).restrictions as string[] ?? []}
@@ -223,6 +224,7 @@ export default async function PerfilPage({ params }: PageProps) {
           number={profile.whatsapp_number}
           name={profile.display_name}
           fixed
+          profileId={profile.id}
           city={profile.city as string}
           services={profile.services as string[] ?? []}
           restrictions={(profile as Record<string, unknown>).restrictions as string[] ?? []}

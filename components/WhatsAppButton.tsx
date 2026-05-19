@@ -2,11 +2,13 @@
 
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { incrementWhatsAppClicks } from "@/lib/mutations";
 
 interface WhatsAppButtonProps {
   number: string;
   name: string;
   fixed?: boolean;
+  profileId?: string;
   city?: string;
   services?: string[];
   restrictions?: string[];
@@ -58,11 +60,15 @@ function buildMessage(name: string, props: Omit<WhatsAppButtonProps, "number" | 
   return encodeURIComponent(lines.join("\n\n"));
 }
 
-export function WhatsAppButton({ number, name, fixed = false, ...profileProps }: WhatsAppButtonProps) {
+export function WhatsAppButton({ number, name, fixed = false, profileId, ...profileProps }: WhatsAppButtonProps) {
   const digits = number.replace(/\D/g, "");
   const clean = digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
   const message = buildMessage(name, profileProps);
   const href = `https://wa.me/55${clean}?text=${message}`;
+
+  function handleClick() {
+    if (profileId) incrementWhatsAppClicks(profileId);
+  }
 
   if (fixed) {
     return (
@@ -70,6 +76,7 @@ export function WhatsAppButton({ number, name, fixed = false, ...profileProps }:
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleClick}
         className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-3 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95"
         aria-label="Contatar via WhatsApp"
       >
@@ -84,6 +91,7 @@ export function WhatsAppButton({ number, name, fixed = false, ...profileProps }:
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className={cn(
         "flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600",
         "text-white font-semibold px-6 py-3 rounded-xl transition-all",
