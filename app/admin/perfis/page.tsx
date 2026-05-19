@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Eye, Search, MapPin, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Search, MapPin, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ interface AdminProfile {
   trust_score: number;
   created_at: string;
   view_count: number;
+  whatsapp_clicks: number;
   slug: string;
 }
 
@@ -43,7 +44,7 @@ export default function AdminPerfisPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, city, status, is_premium, trust_score, created_at, view_count, slug")
+      .select("id, display_name, city, status, is_premium, trust_score, created_at, view_count, whatsapp_clicks, slug")
       .order("created_at", { ascending: false });
 
     setProfiles((data as AdminProfile[]) ?? []);
@@ -134,6 +135,7 @@ export default function AdminPerfisPage() {
                   <th className="text-left p-4 font-semibold text-gray-700">Perfil</th>
                   <th className="text-left p-4 font-semibold text-gray-700 hidden sm:table-cell">Status</th>
                   <th className="text-left p-4 font-semibold text-gray-700 hidden md:table-cell">Score</th>
+                  <th className="text-left p-4 font-semibold text-gray-700 hidden lg:table-cell">Views / ZAP</th>
                   <th className="text-left p-4 font-semibold text-gray-700 hidden lg:table-cell">Cadastro</th>
                   <th className="text-right p-4 font-semibold text-gray-700">Ações</th>
                 </tr>
@@ -179,6 +181,13 @@ export default function AdminPerfisPage() {
                           />
                         </div>
                         <span className="text-xs text-muted-foreground">{Math.round(profile.trust_score)}%</span>
+                      </div>
+                    </td>
+
+                    <td className="p-4 hidden lg:table-cell">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{profile.view_count ?? 0}</span>
+                        <span className="flex items-center gap-1 text-green-600"><MessageCircle className="w-3 h-3" />{profile.whatsapp_clicks ?? 0}</span>
                       </div>
                     </td>
 

@@ -62,7 +62,6 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: "Visualizações", value: profile.view_count ?? 0, icon: Eye, color: "text-blue-500" },
-          { label: "Cliques WhatsApp", value: (profile as Record<string, unknown>).whatsapp_clicks as number ?? 0, icon: MessageCircle, color: "text-green-500" },
           { label: "Fotos", value: photos.length, icon: Images, color: "text-purple-500" },
           { label: "Trust Score", value: `${Math.round(profile.trust_score ?? 0)}%`, icon: ShieldCheck, color: "text-green-500" },
           { label: "Status", value: profile.is_premium ? "Premium" : "Gratuito", icon: Crown, color: "text-yellow-500" },
