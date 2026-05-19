@@ -32,7 +32,12 @@ export async function getActiveProfiles({
 
   if (city) {
     const cityName = city.split(" - ")[0].trim();
-    query = query.ilike("city", `%${cityName}%`);
+    const cityNoAccent = cityName.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    if (cityNoAccent === cityName) {
+      query = query.ilike("city", `%${cityName}%`);
+    } else {
+      query = query.or(`city.ilike.%${cityName}%,city.ilike.%${cityNoAccent}%`);
+    }
   }
   if (priceMin) query = query.gte("price_from", priceMin);
   if (priceMax) query = query.lte("price_to", priceMax);
