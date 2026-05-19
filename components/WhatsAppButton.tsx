@@ -14,28 +14,47 @@ interface WhatsAppButtonProps {
   nightPrice?: string | null;
 }
 
+// Restrições operacionais (regras de atendimento)
+const OPERATIONAL_KEYWORDS = ["pagamento", "hora marcada", "mínimo", "desconto", "higiene", "antecipado", "aplicativo"];
+
+function splitRestrictions(restrictions: string[]) {
+  const rules: string[] = [];
+  const clientRestrictions: string[] = [];
+  restrictions.forEach((r) => {
+    const lower = r.toLowerCase();
+    if (OPERATIONAL_KEYWORDS.some((k) => lower.includes(k))) {
+      rules.push(r);
+    } else {
+      clientRestrictions.push(r);
+    }
+  });
+  return { rules, clientRestrictions };
+}
+
 function buildMessage(name: string, props: Omit<WhatsAppButtonProps, "number" | "name" | "fixed">) {
   const { city, services = [], restrictions = [], hourPrice, nightPrice } = props;
-  const lines: string[] = [`Olá ${name}! Vi seu perfil no GarotasVip 💋`];
 
-  if (city) lines.push(`📍 ${city}`);
+  const lines: string[] = [`Olá ${name}! Vi seu perfil no GarotasVip`];
 
-  if (hourPrice || nightPrice) {
-    const prices = [hourPrice, nightPrice].filter(Boolean).join(" | ");
-    lines.push(`💰 ${prices}`);
+  if (city || hourPrice || nightPrice) {
+    const parts: string[] = [];
+    if (city) parts.push(city);
+    if (hourPrice) parts.push(hourPrice);
+    if (nightPrice) parts.push(nightPrice);
+    lines.push(parts.join("  |  "));
   }
 
   if (services.length > 0) {
-    const shown = services.slice(0, 6).join(", ");
-    const extra = services.length > 6 ? ` (e mais ${services.length - 6})` : "";
-    lines.push(`✅ Faço: ${shown}${extra}`);
+    const shown = services.slice(0, 5).join(", ");
+    const extra = services.length > 5 ? ` (+${services.length - 5} serviços)` : "";
+    lines.push(`Faço: ${shown}${extra}`);
   }
 
-  if (restrictions.length > 0) {
-    lines.push(`❌ Não atendo: ${restrictions.join(", ")}`);
-  }
+  const { rules, clientRestrictions } = splitRestrictions(restrictions);
+  if (rules.length > 0) lines.push(`Condições: ${rules.join(" | ")}`);
+  if (clientRestrictions.length > 0) lines.push(`Não atendo: ${clientRestrictions.join(", ")}`);
 
-  lines.push(`\nTenho interesse, podemos conversar?`);
+  lines.push(`\nPodemos conversar?`);
   return encodeURIComponent(lines.join("\n"));
 }
 
