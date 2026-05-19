@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { getProfileBySlug, getProfileReviews } from "@/lib/queries";
 import { incrementViewCount } from "@/lib/mutations";
 import { getStorageUrl } from "@/lib/utils";
+import { SERVICE_CATEGORIES } from "@/lib/services";
 
 const DAYS_LABEL: Record<string, string> = {
   seg: "Segunda", ter: "Terça", qua: "Quarta", qui: "Quinta",
@@ -49,12 +50,9 @@ export default async function PerfilPage({ params }: PageProps) {
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
 
-  const priceLabel =
-    profile.price_from && profile.price_to
-      ? `R$ ${profile.price_from} – R$ ${profile.price_to}`
-      : profile.price_from
-      ? `A partir de R$ ${profile.price_from}`
-      : null;
+  const hourPrice = profile.price_from ? `R$ ${Number(profile.price_from).toLocaleString("pt-BR")} / hora` : null;
+  const nightPrice = profile.price_to ? `R$ ${Number(profile.price_to).toLocaleString("pt-BR")} / noite` : null;
+  const priceLabel = hourPrice ?? nightPrice;
 
   const availability = profile.availability as Record<string, string> | null;
 
@@ -81,10 +79,16 @@ export default async function PerfilPage({ params }: PageProps) {
                 {profile.whatsapp_number && (
                   <WhatsAppButton number={profile.whatsapp_number} name={profile.display_name} />
                 )}
-                {priceLabel && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {hourPrice && (
+                  <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="w-4 h-4 text-[#C2185B]" />
-                    <span className="font-medium text-gray-900">{priceLabel}</span>
+                    <span className="font-medium text-gray-900">{hourPrice}</span>
+                  </div>
+                )}
+                {nightPrice && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="w-4 h-4 text-[#C2185B]/60" />
+                    <span className="font-medium text-gray-700">{nightPrice}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -120,9 +124,10 @@ export default async function PerfilPage({ params }: PageProps) {
 
                 <TrustScoreBar score={Math.round(profile.trust_score ?? 0)} showDetails />
 
-                {priceLabel && (
-                  <div className="lg:hidden flex items-center gap-2 text-[#C2185B] font-semibold">
-                    <DollarSign className="w-4 h-4" />{priceLabel}
+                {(hourPrice || nightPrice) && (
+                  <div className="lg:hidden flex flex-wrap gap-3">
+                    {hourPrice && <span className="flex items-center gap-1 text-[#C2185B] font-semibold text-sm"><DollarSign className="w-4 h-4" />{hourPrice}</span>}
+                    {nightPrice && <span className="flex items-center gap-1 text-[#C2185B]/80 font-semibold text-sm"><DollarSign className="w-4 h-4" />{nightPrice}</span>}
                   </div>
                 )}
 
@@ -134,15 +139,26 @@ export default async function PerfilPage({ params }: PageProps) {
                 )}
 
                 {profile.services && (profile.services as string[]).length > 0 && (
-                  <div>
-                    <h2 className="text-sm font-semibold text-gray-900 mb-2">Serviços</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {(profile.services as string[]).map((s) => (
-                        <Badge key={s} variant="secondary" className="bg-[#F8BBD9]/40 text-[#C2185B] border-[#F8BBD9]">
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
+                  <div className="space-y-4">
+                    <h2 className="text-sm font-semibold text-gray-900">Serviços</h2>
+                    {SERVICE_CATEGORIES.map((cat) => {
+                      const active = cat.services.filter((s) =>
+                        (profile.services as string[]).includes(s)
+                      );
+                      if (active.length === 0) return null;
+                      return (
+                        <div key={cat.label}>
+                          <p className="text-xs font-semibold text-[#C2185B] uppercase tracking-wide mb-2">{cat.label}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {active.map((s) => (
+                              <Badge key={s} variant="secondary" className="bg-[#F8BBD9]/40 text-[#C2185B] border-[#F8BBD9]">
+                                {s}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

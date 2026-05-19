@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Plus, X } from "lucide-react";
+import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase";
 import { upsertProfile } from "@/lib/mutations";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
 import { slugify } from "@/lib/utils";
+import { SERVICE_CATEGORIES } from "@/lib/services";
 
 const DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const;
 const DAYS_LABEL: Record<string, string> = {
@@ -35,7 +36,6 @@ type FormData = z.infer<typeof schema>;
 export default function EditarPerfilPage() {
   const [saving, setSaving] = useState(false);
   const [services, setServices] = useState<string[]>([]);
-  const [newService, setNewService] = useState("");
   const [availability, setAvailability] = useState<Record<string, string>>(
     Object.fromEntries(DAYS.map((d) => [d, ""]))
   );
@@ -89,14 +89,6 @@ export default function EditarPerfilPage() {
     }
     loadProfile();
   }, [reset]);
-
-  function addService() {
-    const s = newService.trim();
-    if (s && !services.includes(s) && services.length < 15) {
-      setServices((prev) => [...prev, s]);
-      setNewService("");
-    }
-  }
 
   async function onSubmit(data: FormData) {
     if (!userId) {
@@ -188,45 +180,58 @@ export default function EditarPerfilPage() {
 
         {/* Preço */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900">Faixa de preço (R$)</h2>
+          <h2 className="font-semibold text-gray-900">Valores (R$)</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Valor mínimo</Label>
+              <Label>Valor por hora</Label>
               <Input type="number" min={0} placeholder="Ex: 150" {...register("priceFrom")} />
             </div>
             <div className="space-y-1.5">
-              <Label>Valor máximo</Label>
+              <Label>Valor da noite</Label>
               <Input type="number" min={0} placeholder="Ex: 500" {...register("priceTo")} />
             </div>
           </div>
         </div>
 
         {/* Serviços */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900">Serviços oferecidos</h2>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Ex: Jantares, Viagens..."
-              value={newService}
-              onChange={(e) => setNewService(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addService(); } }}
-            />
-            <Button type="button" variant="outline" onClick={addService} className="border-[#C2185B] text-[#C2185B]">
-              <Plus className="w-4 h-4" />
-            </Button>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+          <div>
+            <h2 className="font-semibold text-gray-900">Serviços oferecidos</h2>
+            <p className="text-xs text-muted-foreground mt-1">Marque apenas o que você faz.</p>
           </div>
-          {services.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {services.map((s) => (
-                <span key={s} className="flex items-center gap-1.5 bg-[#F8BBD9]/40 text-[#C2185B] text-sm rounded-full px-3 py-1">
-                  {s}
-                  <button type="button" onClick={() => setServices((prev) => prev.filter((x) => x !== s))} className="hover:text-red-500">
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
+          {SERVICE_CATEGORIES.map((cat) => (
+            <div key={cat.label}>
+              <p className="text-xs font-semibold text-[#C2185B] uppercase tracking-wide mb-2">{cat.label}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4">
+                {cat.services.map((service) => {
+                  const checked = services.includes(service);
+                  return (
+                    <label key={service} className="flex items-center gap-2 cursor-pointer group">
+                      <div
+                        onClick={() =>
+                          setServices((prev) =>
+                            checked ? prev.filter((s) => s !== service) : [...prev, service]
+                          )
+                        }
+                        className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          checked
+                            ? "bg-[#C2185B] border-[#C2185B]"
+                            : "border-gray-300 group-hover:border-[#C2185B]"
+                        }`}
+                      >
+                        {checked && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="text-sm text-gray-700 select-none">{service}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          )}
+          ))}
         </div>
 
         {/* Disponibilidade */}
