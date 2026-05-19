@@ -30,7 +30,10 @@ export async function getActiveProfiles({
     .order("trust_score", { ascending: false })
     .range(from, to);
 
-  if (city) query = query.ilike("city", `%${city}%`);
+  if (city) {
+    const cityName = city.split(" - ")[0].trim();
+    query = query.ilike("city", `%${cityName}%`);
+  }
   if (priceMin) query = query.gte("price_from", priceMin);
   if (priceMax) query = query.lte("price_to", priceMax);
   if (ratingMin) query = query.gte("trust_score", ratingMin * 20);

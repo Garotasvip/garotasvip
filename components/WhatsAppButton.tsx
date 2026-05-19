@@ -10,7 +10,8 @@ interface WhatsAppButtonProps {
 }
 
 export function WhatsAppButton({ number, name, fixed = false }: WhatsAppButtonProps) {
-  const clean = number.replace(/\D/g, "");
+  const digits = number.replace(/\D/g, "");
+  const clean = digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
   const message = encodeURIComponent(`Olá ${name}, vi seu perfil no GarotasVip e gostaria de saber mais.`);
   const href = `https://wa.me/55${clean}?text=${message}`;
 

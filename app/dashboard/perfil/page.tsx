@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Plus, X } from "lucide-react";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase";
 import { upsertProfile } from "@/lib/mutations";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { slugify } from "@/lib/utils";
 
 const DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const;
 const DAYS_LABEL: Record<string, string> = {
@@ -25,13 +27,12 @@ const schema = z.object({
   description: z.string().max(1000).optional(),
   priceFrom: z.string().optional(),
   priceTo: z.string().optional(),
-  whatsappNumber: z.string().min(10, "Número inválido").max(15),
+  whatsappNumber: z.string().min(10, "Número inválido (mínimo 10 dígitos)").max(15).optional().or(z.literal("")),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export default function EditarPerfilPage() {
-  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [services, setServices] = useState<string[]>([]);
   const [newService, setNewService] = useState("");
@@ -39,6 +40,8 @@ export default function EditarPerfilPage() {
     Object.fromEntries(DAYS.map((d) => [d, ""]))
   );
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [profileExists, setProfileExists] = useState(false);
 
   const { register, handleSubmit, reset, watch, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -52,6 +55,7 @@ export default function EditarPerfilPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
+      setUserEmail(user.email ?? null);
 
       const { data } = await supabase
         .from("profiles")
@@ -60,6 +64,7 @@ export default function EditarPerfilPage() {
         .single();
 
       if (data) {
+        setProfileExists(true);
         reset({
           displayName: data.display_name ?? "",
           city: data.city ?? "",
@@ -89,21 +94,30 @@ export default function EditarPerfilPage() {
     if (!userId) return;
     setSaving(true);
 
-    const { error } = await upsertProfile(userId, {
+    const payload: Record<string, unknown> = {
       display_name: data.displayName,
       city: data.city,
       description: data.description ?? null,
       price_from: data.priceFrom ? parseFloat(data.priceFrom) : null,
       price_to: data.priceTo ? parseFloat(data.priceTo) : null,
-      whatsapp_number: data.whatsappNumber,
+      whatsapp_number: data.whatsappNumber || null,
       services,
       availability,
-    });
+    };
 
+    if (!profileExists) {
+      payload.slug = slugify(data.displayName) + "-" + userId.slice(0, 8);
+      payload.status = "pending";
+    }
+
+    const { error } = await upsertProfile(userId, payload);
     setSaving(false);
-    if (!error) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+
+    if (error) {
+      toast.error("Erro ao salvar perfil. Tente novamente.");
+    } else {
+      setProfileExists(true);
+      toast.success("Perfil salvo com sucesso!");
     }
   }
 
@@ -112,6 +126,12 @@ export default function EditarPerfilPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Editar Perfil</h1>
         <p className="text-muted-foreground text-sm mt-1">Mantenha suas informações sempre atualizadas.</p>
+        {userEmail && (
+          <div className="mt-2 inline-flex items-center gap-2 bg-[#F8BBD9]/30 text-[#C2185B] text-sm font-medium px-3 py-1.5 rounded-full">
+            <span className="text-xs text-gray-500">Conta:</span>
+            {userEmail}
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -217,7 +237,6 @@ export default function EditarPerfilPage() {
         </div>
 
         <div className="flex items-center justify-between">
-          {saved && <span className="text-green-600 text-sm font-medium">✓ Perfil salvo!</span>}
           <Button type="submit" className="ml-auto bg-[#C2185B] hover:bg-[#C2185B]/90 text-white gap-2" disabled={saving}>
             <Save className="w-4 h-4" />
             {saving ? "Salvando..." : "Salvar perfil"}
