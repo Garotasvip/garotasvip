@@ -54,7 +54,7 @@ function buildMessage(name: string, props: Omit<WhatsAppButtonProps, "number" | 
   if (rules.length > 0) lines.push(`📋 Condições: ${rules.join(" | ")}`);
   if (clientRestrictions.length > 0) lines.push(`🚫 Não atendo: ${clientRestrictions.join(", ")}`);
 
-  lines.push(`\nPodemos conversar?`);
+  lines.push(`\nVamos marcar? 😉`);
   return encodeURIComponent(lines.join("\n\n"));
 }
 
