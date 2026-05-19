@@ -3,9 +3,26 @@ import { createClient } from "@/lib/supabase";
 
 export async function upsertProfile(userId: string, values: Record<string, unknown>) {
   const supabase = createClient();
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .single();
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(values)
+      .eq("user_id", userId)
+      .select()
+      .single();
+    return { profile: data, error };
+  }
+
   const { data, error } = await supabase
     .from("profiles")
-    .upsert({ user_id: userId, ...values }, { onConflict: "user_id" })
+    .insert({ user_id: userId, ...values })
     .select()
     .single();
   return { profile: data, error };

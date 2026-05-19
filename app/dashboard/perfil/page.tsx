@@ -45,6 +45,14 @@ export default function EditarPerfilPage() {
 
   const { register, handleSubmit, reset, watch, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      displayName: "",
+      city: "",
+      description: "",
+      priceFrom: "",
+      priceTo: "",
+      whatsappNumber: "",
+    },
   });
 
   const description = watch("description") ?? "";
@@ -91,7 +99,10 @@ export default function EditarPerfilPage() {
   }
 
   async function onSubmit(data: FormData) {
-    if (!userId) return;
+    if (!userId) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
     setSaving(true);
 
     const payload: Record<string, unknown> = {
