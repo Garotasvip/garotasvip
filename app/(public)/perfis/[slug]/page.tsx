@@ -77,7 +77,15 @@ export default async function PerfilPage({ params }: PageProps) {
 
               <div className="hidden lg:block bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                 {profile.whatsapp_number && (
-                  <WhatsAppButton number={profile.whatsapp_number} name={profile.display_name} />
+                  <WhatsAppButton
+                    number={profile.whatsapp_number}
+                    name={profile.display_name}
+                    city={profile.city as string}
+                    services={profile.services as string[] ?? []}
+                    restrictions={(profile as Record<string, unknown>).restrictions as string[] ?? []}
+                    hourPrice={hourPrice}
+                    nightPrice={nightPrice}
+                  />
                 )}
                 {hourPrice && (
                   <div className="flex items-center gap-2 text-sm">
@@ -182,6 +190,22 @@ export default async function PerfilPage({ params }: PageProps) {
                 </div>
               )}
 
+              {(() => {
+                const profileRestrictions = (profile as Record<string, unknown>).restrictions as string[] ?? [];
+                return profileRestrictions.length > 0 ? (
+                  <div className="bg-red-50 rounded-2xl border border-red-100 p-6 space-y-3">
+                    <h2 className="text-sm font-semibold text-red-700">❌ Não atendo / Restrições</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {profileRestrictions.map((r) => (
+                        <Badge key={r} className="bg-red-100 text-red-700 border-red-200 hover:bg-red-100">
+                          {r}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
               <ReviewSection
                 profileId={profile.id}
                 profileSlug={profile.slug}
@@ -195,7 +219,16 @@ export default async function PerfilPage({ params }: PageProps) {
       </main>
 
       {profile.whatsapp_number && (
-        <WhatsAppButton number={profile.whatsapp_number} name={profile.display_name} fixed />
+        <WhatsAppButton
+          number={profile.whatsapp_number}
+          name={profile.display_name}
+          fixed
+          city={profile.city as string}
+          services={profile.services as string[] ?? []}
+          restrictions={(profile as Record<string, unknown>).restrictions as string[] ?? []}
+          hourPrice={hourPrice}
+          nightPrice={nightPrice}
+        />
       )}
       <Footer />
     </>

@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save } from "lucide-react";
+import { Save, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase";
 import { upsertProfile } from "@/lib/mutations";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
 import { slugify } from "@/lib/utils";
-import { SERVICE_CATEGORIES } from "@/lib/services";
+import { SERVICE_CATEGORIES, RESTRICTION_PRESETS } from "@/lib/services";
 
 const DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const;
 const DAYS_LABEL: Record<string, string> = {
@@ -36,6 +36,9 @@ type FormData = z.infer<typeof schema>;
 export default function EditarPerfilPage() {
   const [saving, setSaving] = useState(false);
   const [services, setServices] = useState<string[]>([]);
+  const [restrictions, setRestrictions] = useState<string[]>([]);
+  const [customService, setCustomService] = useState("");
+  const [customRestriction, setCustomRestriction] = useState("");
   const [availability, setAvailability] = useState<Record<string, string>>(
     Object.fromEntries(DAYS.map((d) => [d, ""]))
   );
@@ -82,6 +85,7 @@ export default function EditarPerfilPage() {
           whatsappNumber: data.whatsapp_number ?? "",
         });
         setServices(data.services ?? []);
+        setRestrictions((data as Record<string, unknown>).restrictions as string[] ?? []);
         if (data.availability) {
           setAvailability({ ...Object.fromEntries(DAYS.map((d) => [d, ""])), ...(data.availability as Record<string, string>) });
         }
@@ -105,6 +109,7 @@ export default function EditarPerfilPage() {
       price_to: data.priceTo ? parseFloat(data.priceTo) : null,
       whatsapp_number: data.whatsappNumber || null,
       services,
+      restrictions,
       availability,
     };
 
@@ -232,6 +237,108 @@ export default function EditarPerfilPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Serviços extras */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">Serviços adicionais</h2>
+            <p className="text-xs text-muted-foreground mt-1">Serviços que não estão na lista acima.</p>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Ex: Massagem tântrica, Jantar acompanhada..."
+              value={customService}
+              onChange={(e) => setCustomService(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const s = customService.trim();
+                  if (s && !services.includes(s)) { setServices((p) => [...p, s]); setCustomService(""); }
+                }
+              }}
+            />
+            <Button type="button" variant="outline" onClick={() => {
+              const s = customService.trim();
+              if (s && !services.includes(s)) { setServices((p) => [...p, s]); setCustomService(""); }
+            }} className="border-[#C2185B] text-[#C2185B]">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {services.filter((s) => !SERVICE_CATEGORIES.flatMap((c) => c.services).includes(s)).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {services.filter((s) => !SERVICE_CATEGORIES.flatMap((c) => c.services).includes(s)).map((s) => (
+                <span key={s} className="flex items-center gap-1.5 bg-[#F8BBD9]/40 text-[#C2185B] text-sm rounded-full px-3 py-1">
+                  {s}
+                  <button type="button" onClick={() => setServices((p) => p.filter((x) => x !== s))}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Restrições */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+          <div>
+            <h2 className="font-semibold text-gray-900">Restrições</h2>
+            <p className="text-xs text-muted-foreground mt-1">O que você não aceita ou exige dos clientes.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4">
+            {RESTRICTION_PRESETS.map((r) => {
+              const checked = restrictions.includes(r);
+              return (
+                <label key={r} className="flex items-center gap-2 cursor-pointer group">
+                  <div
+                    onClick={() => setRestrictions((prev) => checked ? prev.filter((x) => x !== r) : [...prev, r])}
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      checked ? "bg-red-500 border-red-500" : "border-gray-300 group-hover:border-red-400"
+                    }`}
+                  >
+                    {checked && (
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-700 select-none">{r}</span>
+                </label>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Outra restrição personalizada..."
+              value={customRestriction}
+              onChange={(e) => setCustomRestriction(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const r = customRestriction.trim();
+                  if (r && !restrictions.includes(r)) { setRestrictions((p) => [...p, r]); setCustomRestriction(""); }
+                }
+              }}
+            />
+            <Button type="button" variant="outline" onClick={() => {
+              const r = customRestriction.trim();
+              if (r && !restrictions.includes(r)) { setRestrictions((p) => [...p, r]); setCustomRestriction(""); }
+            }} className="border-red-400 text-red-500">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {restrictions.filter((r) => !RESTRICTION_PRESETS.includes(r)).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {restrictions.filter((r) => !RESTRICTION_PRESETS.includes(r)).map((r) => (
+                <span key={r} className="flex items-center gap-1.5 bg-red-50 text-red-600 text-sm rounded-full px-3 py-1">
+                  {r}
+                  <button type="button" onClick={() => setRestrictions((p) => p.filter((x) => x !== r))}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Disponibilidade */}

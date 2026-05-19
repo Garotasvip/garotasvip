@@ -7,12 +7,42 @@ interface WhatsAppButtonProps {
   number: string;
   name: string;
   fixed?: boolean;
+  city?: string;
+  services?: string[];
+  restrictions?: string[];
+  hourPrice?: string | null;
+  nightPrice?: string | null;
 }
 
-export function WhatsAppButton({ number, name, fixed = false }: WhatsAppButtonProps) {
+function buildMessage(name: string, props: Omit<WhatsAppButtonProps, "number" | "name" | "fixed">) {
+  const { city, services = [], restrictions = [], hourPrice, nightPrice } = props;
+  const lines: string[] = [`Olá ${name}! Vi seu perfil no GarotasVip 💋`];
+
+  if (city) lines.push(`📍 ${city}`);
+
+  if (hourPrice || nightPrice) {
+    const prices = [hourPrice, nightPrice].filter(Boolean).join(" | ");
+    lines.push(`💰 ${prices}`);
+  }
+
+  if (services.length > 0) {
+    const shown = services.slice(0, 6).join(", ");
+    const extra = services.length > 6 ? ` (e mais ${services.length - 6})` : "";
+    lines.push(`✅ Faço: ${shown}${extra}`);
+  }
+
+  if (restrictions.length > 0) {
+    lines.push(`❌ Não atendo: ${restrictions.join(", ")}`);
+  }
+
+  lines.push(`\nTenho interesse, podemos conversar?`);
+  return encodeURIComponent(lines.join("\n"));
+}
+
+export function WhatsAppButton({ number, name, fixed = false, ...profileProps }: WhatsAppButtonProps) {
   const digits = number.replace(/\D/g, "");
   const clean = digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
-  const message = encodeURIComponent(`Olá ${name}, vi seu perfil no GarotasVip e gostaria de saber mais.`);
+  const message = buildMessage(name, profileProps);
   const href = `https://wa.me/55${clean}?text=${message}`;
 
   if (fixed) {

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   birth_date DATE,
   description TEXT,
   services TEXT[],
+  restrictions TEXT[],
   price_from DECIMAL(10,2),
   price_to DECIMAL(10,2),
   whatsapp_number VARCHAR(20),

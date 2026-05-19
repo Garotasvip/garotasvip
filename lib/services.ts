@@ -82,3 +82,16 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
 ];
 
 export const ALL_SERVICES = SERVICE_CATEGORIES.flatMap((c) => c.services);
+
+export const RESTRICTION_PRESETS = [
+  "Não atendo bêbados",
+  "Não atendo fumantes",
+  "Sem foto, sem atendimento",
+  "Sem desconto",
+  "Hora marcada obrigatória",
+  "Programa mínimo de 1 hora",
+  "Pagamento antecipado",
+  "Somente com higiene",
+  "Sem barganha",
+  "Não atendo pelo aplicativo",
+];
