@@ -114,7 +114,7 @@ export default async function PerfilPage({ params }: PageProps) {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h1 className="text-2xl font-bold text-gray-900">{profile.display_name}</h1>
+                      <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{profile.display_name}</h1>
                       {profile.is_premium && (
                         <Badge className="bg-[#C2185B] text-white border-0 gap-1">
                           <Crown className="w-3 h-3" />Premium
@@ -178,7 +178,7 @@ export default async function PerfilPage({ params }: PageProps) {
                     <Clock className="w-5 h-5 text-[#C2185B]" />
                     <h2 className="font-semibold text-gray-900">Disponibilidade</h2>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {Object.entries(availability).map(([day, hours]) => (
                       <div key={day} className={`rounded-xl p-3 text-center text-sm ${
                         hours === "Indisponível" ? "bg-gray-50 text-gray-400" : "bg-[#F8BBD9]/20 text-gray-700"

@@ -64,7 +64,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-8">
           <h1 className="text-xl font-bold mb-6">Entrar na sua conta</h1>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

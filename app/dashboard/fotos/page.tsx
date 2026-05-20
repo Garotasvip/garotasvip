@@ -166,14 +166,14 @@ export default function FotosPage() {
           {photos.map((photo) => (
             <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100">
               <Image src={photo.url} alt="Foto" fill className="object-cover" />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                 <button onClick={() => setCover(photo.id)} title="Definir como capa"
-                  className="bg-white/90 rounded-full p-2 hover:bg-yellow-400 hover:text-white transition-colors">
-                  <Star className="w-4 h-4" />
+                  className="bg-white/90 rounded-full p-3 hover:bg-yellow-400 hover:text-white transition-colors">
+                  <Star className="w-5 h-5" />
                 </button>
                 <button onClick={() => removePhoto(photo)} title="Remover"
-                  className="bg-white/90 rounded-full p-2 hover:bg-red-500 hover:text-white transition-colors">
-                  <Trash2 className="w-4 h-4" />
+                  className="bg-white/90 rounded-full p-3 hover:bg-red-500 hover:text-white transition-colors">
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
               {photo.uploading && (

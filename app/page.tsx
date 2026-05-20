@@ -41,12 +41,12 @@ export default async function Home() {
         <section className="relative bg-gradient-to-br from-[#C2185B] via-[#E91E8C] to-[#F8BBD9] text-white overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4">
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 text-center">
+            <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-4">
               Encontre acompanhantes<br />
               <span className="text-[#F8BBD9]">verificadas perto de você</span>
             </h1>
-            <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto">
+            <p className="text-white/80 text-base sm:text-lg mb-8 sm:mb-10 max-w-xl mx-auto">
               Perfis com verificação real, avaliações honestas e total segurança.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
@@ -134,10 +134,10 @@ export default async function Home() {
         )}
 
         {/* ── CTA ──────────────────────────────────────────── */}
-        <section className="bg-gradient-to-r from-[#C2185B] to-[#E91E8C] text-white py-14">
+        <section className="bg-gradient-to-r from-[#C2185B] to-[#E91E8C] text-white py-10 sm:py-14">
           <div className="max-w-2xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-3">Quer anunciar seu perfil?</h2>
-            <p className="text-white/80 mb-8">Crie sua conta gratuitamente e alcance milhares de clientes todos os dias.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Quer anunciar seu perfil?</h2>
+            <p className="text-white/80 text-sm sm:text-base mb-6 sm:mb-8">Crie sua conta gratuitamente e alcance milhares de clientes todos os dias.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/cadastro">
                 <Button size="lg" className="bg-white text-[#C2185B] hover:bg-white/90 font-semibold px-10">Criar conta grátis</Button>

@@ -211,21 +211,16 @@ export default function EditarPerfilPage() {
                 {cat.services.map((service) => {
                   const checked = services.includes(service);
                   return (
-                    <label key={service} className="flex items-center gap-2 cursor-pointer group">
-                      <div
-                        onClick={() =>
-                          setServices((prev) =>
-                            checked ? prev.filter((s) => s !== service) : [...prev, service]
-                          )
-                        }
-                        className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          checked
-                            ? "bg-[#C2185B] border-[#C2185B]"
-                            : "border-gray-300 group-hover:border-[#C2185B]"
-                        }`}
-                      >
+                    <label
+                      key={service}
+                      className="flex items-center gap-3 cursor-pointer group py-1.5"
+                      onClick={() => setServices((prev) => checked ? prev.filter((s) => s !== service) : [...prev, service])}
+                    >
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                        checked ? "bg-[#C2185B] border-[#C2185B]" : "border-gray-300 group-hover:border-[#C2185B]"
+                      }`}>
                         {checked && (
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
@@ -289,15 +284,16 @@ export default function EditarPerfilPage() {
             {RESTRICTION_PRESETS.map((r) => {
               const checked = restrictions.includes(r);
               return (
-                <label key={r} className="flex items-center gap-2 cursor-pointer group">
-                  <div
-                    onClick={() => setRestrictions((prev) => checked ? prev.filter((x) => x !== r) : [...prev, r])}
-                    className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      checked ? "bg-red-500 border-red-500" : "border-gray-300 group-hover:border-red-400"
-                    }`}
-                  >
+                <label
+                  key={r}
+                  className="flex items-center gap-3 cursor-pointer group py-1.5"
+                  onClick={() => setRestrictions((prev) => checked ? prev.filter((x) => x !== r) : [...prev, r])}
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                    checked ? "bg-red-500 border-red-500" : "border-gray-300 group-hover:border-red-400"
+                  }`}>
                     {checked && (
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
                         <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
